@@ -4,7 +4,7 @@ Helpful Library and CLI for daily alertmanager tasks.
 ## Configuration
 Configuration ist done with the .amlib.yaml file in the users home directory.
 
-Example (not't forget trailing slashes):
+Example (don't forget trailing slashes in URLs):
 ```
 URL:
   BASE_URL: "https://YOUR.ALERTMANAGER.URL/"
@@ -15,6 +15,22 @@ Authentication:
     HEADER_KEY1: HEADER-VALUE1
     HEADER_KEY2: HEADER-VALUE2
     ...
+```
+
+### Authentication
+At the moment only header-based authentication is supported. The headers specified in the configuration will be added to the API requests.
+## amcli - Alertmanager CLI
+### basic usage
+```
+> amcli --help
+Usage: amcli [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  alert
+  silence  Commands for handling silences
 ```
 ## Use PipEnv
 1. [optional] create *.venv* - virtual environment directory

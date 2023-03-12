@@ -5,17 +5,16 @@ name = "pypi"
 
 [packages]
 requests = "*"
-pytz = "*"
 pydantic = "*"
 click = "*"
 tabulate = "*"
-types-tabulate = "*"
 pytimeparse = "*"
 pyyaml = "*"
 
 [dev-packages]
 mypy = "*"
 types-pytz = "*"
+types-tabulate = "*"
 pylint = "*"
 setuptools = "*"
 types-requests = "*"

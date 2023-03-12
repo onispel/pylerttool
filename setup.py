@@ -6,7 +6,14 @@ setup(
     version="0.0.1",
     author="Oliver Nispel",
     requires=["requests","pydantic","__future__"],
-    # install_requires=["requests"],
+    install_requires=[
+        "requests",
+        "pydantic",
+        "click",
+        "tabulate",
+        "pyyaml",
+        "pytimepares",
+    ],
     include_package_data=True,
     packages=find_namespace_packages(where="src"),
     package_dir={

@@ -12,7 +12,7 @@ setup(
         "click",
         "tabulate",
         "pyyaml",
-        "pytimepares",
+        "pytimeparse",
     ],
     include_package_data=True,
     packages=find_namespace_packages(where="src"),

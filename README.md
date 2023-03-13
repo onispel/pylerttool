@@ -1,6 +1,19 @@
 # pylerttool
 Helpful Library and CLI for daily alertmanager tasks.
 
+## Installation
+### Pip from GitHub
+```
+pip install git+https://github.com/onispel/pylerttool.git
+```
+### pipenv from Github
+```
+pipenv install git+https://github.com/onispel/pylerttool.git#egg=pylerttool
+```
+### pip from local cloned repository
+```
+pip install --editable .
+```
 ## Configuration
 Configuration ist done with the .amlib.yaml file in the users home directory.
 

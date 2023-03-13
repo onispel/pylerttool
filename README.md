@@ -29,8 +29,9 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  alert
+  alert    show and filter alerts
   silence  Commands for handling silences
+  status   Cluster status commands
 ```
 ## Use PipEnv
 1. [optional] create *.venv* - virtual environment directory

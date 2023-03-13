@@ -33,54 +33,71 @@ state_colors = {
     model.State.expired: 'red'
 }
 
+def echo_status(status: model.AlertmanagerStatus) -> None:
+    """ Print representation of status """
+    stat_tbl = []
+    cluster_info = [['Name', status.cluster.name]]
+    cluster_info.append(['Status',status.cluster.status.value])
+    cluster_peers = [[peer.address, peer.name] for peer in status.cluster.peers]
+    cluster_info.append(['Peers', tabulate.tabulate(cluster_peers, tablefmt='plain')])
+    stat_tbl.append(['Cluster', tabulate.tabulate(cluster_info, tablefmt='plain')])
+    stat_tbl.append(['Uptime', str(status.uptime)])
+    version_info = [['Version', status.versionInfo.version]]
+    version_info.append(['Revision', status.versionInfo.revision])
+    version_info.append(['Branch', status.versionInfo.branch])
+    version_info.append(['BuildUser', status.versionInfo.buildUser])
+    version_info.append(['BuildDate', status.versionInfo.buildDate])
+    version_info.append(['GoVersion', status.versionInfo.goVersion])
+    stat_tbl.append(['VersionInfo', tabulate.tabulate(version_info, tablefmt='plain')])
+    click.echo(tabulate.tabulate(stat_tbl))
 
 def echo_silence(silence: model.GettableSilence, tzi: tzinfo | None = timezone.utc) -> None:
     """ Print representation of silence """
-    stb: list[list[str]] = []
-    stb.append(['ID', click.style(silence.id, fg='yellow')])
-    stb.append(['Starts at', str(silence.startsAt.astimezone(tzi))])
-    stb.append(['Ends at', str(silence.endsAt.astimezone(tzi))])
-    stb.append(['Updated at', str(silence.updatedAt.astimezone(tzi))])
-    stb.append(['Created by', str(silence.createdBy)])
-    stb.append(['Comment', silence.comment])
-    stb.append(['State', click.style(silence.status.state.value,
+    silence_tbl: list[list[str]] = []
+    silence_tbl.append(['ID', click.style(silence.id, fg='yellow')])
+    silence_tbl.append(['Starts at', str(silence.startsAt.astimezone(tzi))])
+    silence_tbl.append(['Ends at', str(silence.endsAt.astimezone(tzi))])
+    silence_tbl.append(['Updated at', str(silence.updatedAt.astimezone(tzi))])
+    silence_tbl.append(['Created by', str(silence.createdBy)])
+    silence_tbl.append(['Comment', silence.comment])
+    silence_tbl.append(['State', click.style(silence.status.state.value,
                fg=state_colors[silence.status.state])])
     matchers = [(m.name, matcher_op_to_str(m), m.value)
                 for m in silence.matchers.__root__]
-    stb.append(['Matchers', tabulate.tabulate(matchers, tablefmt='plain')])
-    stb.append(['SilenceURL', tools.silence_url(silence)])
-    click.echo(tabulate.tabulate(stb))
+    silence_tbl.append(['Matchers', tabulate.tabulate(matchers, tablefmt='plain')])
+    silence_tbl.append(['SilenceURL', tools.silence_url(silence)])
+    click.echo(tabulate.tabulate(silence_tbl))
 
 
 def echo_alert(alert: model.GettableAlert, tzi: tzinfo = timezone.utc) -> None:
     """ Print representation of alert """
-    atb = []
-    atb.append(['fingerprint', click.style(alert.fingerprint, fg='yellow')])
-    atb.append(['startsAt', str(alert.startsAt.astimezone(tzi))])
-    atb.append(['endsAt', str(alert.endsAt.astimezone(tzi))])
-    atb.append(['state', alert.status.state.value])
+    alert_tbl = []
+    alert_tbl.append(['fingerprint', click.style(alert.fingerprint, fg='yellow')])
+    alert_tbl.append(['startsAt', str(alert.startsAt.astimezone(tzi))])
+    alert_tbl.append(['endsAt', str(alert.endsAt.astimezone(tzi))])
+    alert_tbl.append(['state', alert.status.state.value])
     # atb.append(['silencedBy',alert.status.state])
     receivers = [['', rec.name] for rec in alert.receivers]
     if len(receivers) > 0:
         receivers[0][0] = 'receivers'
-        atb.extend(receivers)
+        alert_tbl.extend(receivers)
     silencers = [['', sil] for sil in alert.status.silencedBy]
     if len(silencers) > 0:
         silencers[0][0] = "silencedBy"
-        atb.extend(silencers)
+        alert_tbl.extend(silencers)
     inhibitors = [['', inh] for inh in alert.status.inhibitedBy]
     if len(inhibitors) > 0:
         inhibitors[0][0] = "silencedBy"
-        atb.extend(inhibitors)
+        alert_tbl.extend(inhibitors)
     annotations = [[ann[0], '=', ann[1]] for ann in alert.annotations]
     if len(annotations) > 0:
-        atb.append(['annotations', tabulate.tabulate(
+        alert_tbl.append(['annotations', tabulate.tabulate(
             annotations, tablefmt='plain')])
     labels = [[label[0], '=', label[1]] for label in alert.labels]
     if len(labels) > 0:
-        atb.append(['labels', tabulate.tabulate(labels, tablefmt='plain')])
-    atb.append(['generatorURL', str(alert.generatorURL)])
-    click.echo(tabulate.tabulate(atb))
+        alert_tbl.append(['labels', tabulate.tabulate(labels, tablefmt='plain')])
+    alert_tbl.append(['generatorURL', str(alert.generatorURL)])
+    click.echo(tabulate.tabulate(alert_tbl))
 
 
 def parse_matcher(expr: str) -> model.Matcher | None:
@@ -102,11 +119,26 @@ def matcher_op_to_str(matcher: model.Matcher) -> str:
     moper += "~" if matcher.isRegex else ""
     return moper
 
+@click.group(name="status")
+def status_grp() -> None:
+    """Cluster status commands"""
+    pass
+
+@click.command(name='show')
+def status_show() -> None:
+    """ Show status of alertmanager """
+    status = tools.get_status()
+    echo_status(status)
+
+@click.command(name='config')
+def status_config() -> None:
+    """ Show config of alertmanager """
+    config = tools.get_status().config.original
+    click.echo(config)
 
 @click.group(name="silence")
 def silence_grp() -> None:
     """Commands for handling silences"""
-
 
 @click.command(name='filter')
 @click.option('--active/--noactive', default=True, show_default='active')
@@ -344,6 +376,7 @@ def silence_show(localtime: bool, silence_id: str) -> None:
 
 @click.group(name='alert')
 def alert_grp() -> None:
+    """show and filter alerts"""
     pass
 
 
@@ -375,6 +408,9 @@ def alert_filter(fingerprint: str, active: bool = True, silenced: bool = True, i
 def main_cli() -> None:
     pass
 
+status_grp.add_command(status_show)
+status_grp.add_command(status_config)
+main_cli.add_command(status_grp)
 
 silence_grp.add_command(silence_filter)
 silence_grp.add_command(silence_show)
@@ -384,6 +420,7 @@ silence_grp.add_command(silence_delete)
 silence_grp.add_command(silence_expires)
 silence_grp.add_command(silence_expired)
 main_cli.add_command(silence_grp)
+
 alert_grp.add_command(alert_filter)
 main_cli.add_command(alert_grp)
 

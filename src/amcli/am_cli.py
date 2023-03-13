@@ -27,7 +27,7 @@ state_colors = {
     model.State.expired: 'red'
 }
 
-def echo_status(status: model.AlertmanagerStatus) -> None:
+def echo_status(status: model.AlertmanagerStatus, tzi: tzinfo | None = timezone.utc) -> None:
     """ Print representation of status """
     stat_tbl = []
     cluster_info = [['Name', status.cluster.name]]
@@ -35,7 +35,7 @@ def echo_status(status: model.AlertmanagerStatus) -> None:
     cluster_peers = [[peer.address, peer.name] for peer in status.cluster.peers]
     cluster_info.append(['Peers', tabulate.tabulate(cluster_peers, tablefmt='plain')])
     stat_tbl.append(['Cluster', tabulate.tabulate(cluster_info, tablefmt='plain')])
-    stat_tbl.append(['Uptime', str(status.uptime)])
+    stat_tbl.append(['Uptime', str(status.uptime.astimezone(tzi))])
     version_info = [['Version', status.versionInfo.version]]
     version_info.append(['Revision', status.versionInfo.revision])
     version_info.append(['Branch', status.versionInfo.branch])
@@ -119,10 +119,12 @@ def status_grp() -> None:
     pass
 
 @click.command(name='show')
-def status_show() -> None:
+@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+def status_show(localtime:bool) -> None:
     """ Show status of alertmanager """
+    tz_info = LOCAL_TZ if localtime else timezone.utc
     status = tools.get_status()
-    echo_status(status)
+    echo_status(status,tz_info)
 
 @click.command(name='config')
 def status_config() -> None:

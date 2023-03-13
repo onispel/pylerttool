@@ -21,12 +21,6 @@ DT_FORMATS = [
     '%H:%M'
 ]
 
-# def silence_from_template(name:str) -> model.Silence:
-#     path = os.path.dirname(os.path.abspath(sys.argv[0]))
-#     with open(Path(path, "templates",f"{name}.json"),"r") as tpl:
-#         stemplate = json.load(tpl)
-#         return model.Silence.parse_obj(stemplate)
-
 state_colors = {
     model.State.active: 'green',
     model.State.pending: 'yellow',

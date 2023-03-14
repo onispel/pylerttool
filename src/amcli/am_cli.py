@@ -252,7 +252,7 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
 
 
 @click.command(name='modify')
-@click.option('--id', type=str, required=True, help='Silence ID')
+@click.option('--sid', type=str, required=True, help='Silence ID')
 @click.option('--start', '-s', type=click.DateTime(formats=DT_FORMATS), default=None, help="startsAt")
 @click.option('--duration', '-d', type=str, default=None, help='Duration -> endsAt (overrides --end)')
 @click.option('--end', '-e', type=click.DateTime(formats=DT_FORMATS), default=None, help="endsAt")
@@ -338,7 +338,6 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
     matchers = []
     for single_match in matcher:
         matcher_obj = parse_matcher(single_match)
-        click.echo(matcher_obj)
         if matcher_obj:
             matchers.append(matcher_obj)
     silence = model.Silence(
@@ -378,10 +377,10 @@ def alert_grp() -> None:
 
 @click.command(name='filter')
 @click.option('--fingerprint', type=str, default=None, help='fingerprint of alert')
-@click.option('--active/--noactive', 'active', default=True, help='allow/deny active alerts')
-@click.option('--silenced/--nosilenced', 'silenced', default=True, help='allow/deny silenced alerts')
-@click.option('--inhibited/--noinhibited', 'inhibited', default=True, help='allow/deny inhibited alerts')
-@click.option('--unprocessed/--nounprocessed', 'unprocessed', default=True, help='allow/deny unprocessed alerts')
+@click.option('--active/--noactive', 'active', default=True,show_default="--active" ,help='allow/deny active alerts')
+@click.option('--silenced/--nosilenced', 'silenced', default=True,show_default="--silenced" ,help='allow/deny silenced alerts')
+@click.option('--inhibited/--noinhibited', 'inhibited', default=False,show_default="--noinhibited" ,help='allow/deny inhibited alerts')
+@click.option('--unprocessed/--nounprocessed', 'unprocessed', default=False,show_default="--nounprocessed", help='allow/deny unprocessed alerts')
 @click.option('--receiver', type=str, help='alerts sent to a specific receiver')
 @click.option('--find-silences', 'find_silences', is_flag=True, default=False)
 @click.argument('label_filter', nargs=-1)
@@ -398,7 +397,10 @@ def alert_filter(fingerprint: str, active: bool = True, silenced: bool = True, i
             for silence in silences:
                 if tools.is_matching_all(alert.labels, silence.matchers):
                     echo_silence(silence)
-
+    if not alerts:
+        click.echo('No alerts found.')
+    else :
+        click.echo(f'{len(alerts)} alerts found.')
 
 @click.group
 def main_cli() -> None:

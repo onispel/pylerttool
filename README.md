@@ -15,7 +15,7 @@ pipenv install git+https://github.com/onispel/pylerttool.git#egg=pylerttool
 pip install --editable .
 ```
 ## Configuration
-Configuration ist done with the .amlib.yaml file in the users home directory.
+Configuration is done with the .amlib.yaml file in the users home directory.
 
 Example (don't forget trailing slashes in URLs):
 ```

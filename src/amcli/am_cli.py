@@ -252,7 +252,7 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
 
 
 @click.command(name='modify')
-@click.option('--id', type=str, required=True, help='Silence ID')
+@click.option('--sid', type=str, required=True, help='Silence ID')
 @click.option('--start', '-s', type=click.DateTime(formats=DT_FORMATS), default=None, help="startsAt")
 @click.option('--duration', '-d', type=str, default=None, help='Duration -> endsAt (overrides --end)')
 @click.option('--end', '-e', type=click.DateTime(formats=DT_FORMATS), default=None, help="endsAt")
@@ -338,7 +338,6 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
     matchers = []
     for single_match in matcher:
         matcher_obj = parse_matcher(single_match)
-        click.echo(matcher_obj)
         if matcher_obj:
             matchers.append(matcher_obj)
     silence = model.Silence(

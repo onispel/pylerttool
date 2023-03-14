@@ -398,7 +398,10 @@ def alert_filter(fingerprint: str, active: bool = True, silenced: bool = True, i
             for silence in silences:
                 if tools.is_matching_all(alert.labels, silence.matchers):
                     echo_silence(silence)
-
+    if not alerts:
+        click.echo('No alerts found.')
+    else :
+        click.echo(f'{len(alerts)} alerts found.')
 
 @click.group
 def main_cli() -> None:

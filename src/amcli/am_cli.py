@@ -229,7 +229,10 @@ def silence_expires(localtime: bool, before: datetime | None, after: datetime | 
 
     if silence_list:
         for silence in silence_list:
+            alerts = tools.find_alerts(silence)
             echo_silence(silence, tz_info)
+            if alerts:
+                click.echo(f"Found {len(alerts)} alerts matching this silence")
         click.echo(f'Found {len(silence_list)} expiring silences')
     else:
         click.echo('No expiring silences found')

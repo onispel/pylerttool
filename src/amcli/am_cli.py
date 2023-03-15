@@ -1,5 +1,6 @@
 """ Command line interface for alertmanager"""
 
+from email.policy import default
 import getpass
 import re
 from datetime import date, datetime, time, timedelta, timezone, tzinfo
@@ -48,22 +49,26 @@ def echo_status(status: model.AlertmanagerStatus, tzi: tzinfo | None = timezone.
 def echo_silence(silence: model.GettableSilence, tzi: tzinfo | None = timezone.utc) -> None:
     """ Print representation of silence """
     silence_tbl: list[list[str]] = []
-    silence_tbl.append(['ID', click.style(silence.id, fg='yellow')])
+    if hasattr(silence, 'id'): # only for gettable silences
+        silence_tbl.append(['ID', click.style(silence.id, fg='yellow')])
     silence_tbl.append(['Starts at', str(silence.startsAt.astimezone(tzi))])
     silence_tbl.append(['Ends at', str(silence.endsAt.astimezone(tzi))])
-    silence_tbl.append(['Updated at', str(silence.updatedAt.astimezone(tzi))])
+    if hasattr(silence, 'updatedAt'): # only for gettable silences
+        silence_tbl.append(['Updated at', str(silence.updatedAt.astimezone(tzi))])
     silence_tbl.append(['Created by', str(silence.createdBy)])
     silence_tbl.append(['Comment', silence.comment])
-    silence_tbl.append(['State', click.style(silence.status.state.value,
+    if hasattr(silence, 'status'): # only for gettable silences
+        silence_tbl.append(['State', click.style(silence.status.state.value,
                fg=state_colors[silence.status.state])])
     matchers = [(m.name, matcher_op_to_str(m), m.value)
                 for m in silence.matchers.__root__]
     silence_tbl.append(['Matchers', tabulate.tabulate(matchers, tablefmt='plain')])
-    silence_tbl.append(['SilenceURL', tools.silence_url(silence)])
+    if hasattr(silence, 'id'): # only for gettable silences
+        silence_tbl.append(['SilenceURL', tools.silence_url(silence)])
     click.echo(tabulate.tabulate(silence_tbl))
 
 
-def echo_alert(alert: model.GettableAlert, tzi: tzinfo = timezone.utc) -> None:
+def echo_alert(alert: model.GettableAlert, tzi: tzinfo | None = timezone.utc) -> None:
     """ Print representation of alert """
     alert_tbl = []
     alert_tbl.append(['fingerprint', click.style(alert.fingerprint, fg='yellow')])
@@ -141,8 +146,9 @@ def silence_grp() -> None:
 @click.option('--pending/--nopending', default=True, show_default='pending')
 @click.option('--expired/--noexpired', default=False, show_default='noexpired')
 @click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Show alerts that match the silence')
 @click.argument('match_filter', nargs=-1)
-def silence_filter(active: bool, pending: bool, expired: bool, localtime: bool, match_filter: list[str]) -> None:
+def silence_filter(active: bool, pending: bool, expired: bool, localtime: bool, show_alerts: bool, match_filter: list[str] | None = None) -> None:
     """ Filter silences by state or matchers """
     tz_info = LOCAL_TZ if localtime else timezone.utc
     statelist = []
@@ -152,9 +158,17 @@ def silence_filter(active: bool, pending: bool, expired: bool, localtime: bool, 
         statelist.append(model.State.pending)
     if expired:
         statelist.append(model.State.expired)
-    silences = tools.get_silences(statelist, match_filter)
+    silences = tools.get_silences(tuple(statelist), match_filter)
     for silence in silences:
         echo_silence(silence, tz_info)
+        alerts = tools.find_alerts(silence)
+        if show_alerts:
+            for alert in alerts:
+                echo_alert(alert, tz_info)
+        if alerts:
+            click.echo(f"Found {len(alerts)} alerts matching this silence")
+        else:
+            click.echo("No alerts match this silence")
 
 
 @click.command(name='delete')
@@ -184,7 +198,7 @@ def silence_expires(localtime: bool, before: datetime | None, after: datetime | 
         raise click.UsageError(
             "Exactly ONE option of --before, --after, --within, --notwithin has to be used.")
 
-    silence_list = tools.get_silences([model.State.active, model.State.pending])
+    silence_list = tools.get_silences(tuple([model.State.active, model.State.pending]))
 
     expiry_date = None
     if within:
@@ -241,7 +255,7 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
             after = datetime.combine(datetime.now(tz_info).date(), time(
                 after.hour, after.minute, after.second))
         expiry_date = after.astimezone(tz_info)
-    silence_list = tools.get_silences([model.State.expired])
+    silence_list = tools.get_silences(tuple([model.State.expired]))
     if silence_list:
         silence_list = [
             silence for silence in silence_list if silence.endsAt > expiry_date]
@@ -260,8 +274,9 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
 @click.option('--comment', '-t', type=str, default=None, help='Comment on silence')
 @click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
 @click.option('--noop', is_flag=True, help="Do nothing - testing only.")
+@click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Find alerts that match the silence')
 @click.argument('matcher', nargs=-1)
-def silence_modify(sid: str, start: datetime, duration: str, end: datetime, creator: str, comment: str, matcher: list[str], noop, localtime) -> None:
+def silence_modify(sid: str, start: datetime, duration: str, end: datetime, creator: str, comment: str, matcher: list[str], noop: bool, show_alerts:bool, localtime: bool) -> None:
     """modify existing silence"""
     tz_info = LOCAL_TZ if localtime else timezone.utc
     silence = tools.get_silence(sid)
@@ -296,6 +311,15 @@ def silence_modify(sid: str, start: datetime, duration: str, end: datetime, crea
             silence.matchers = model.Matchers.parse_obj(matchers)
         if noop:
             echo_silence(silence)
+            alerts = tools.get_alerts(silence)
+            if show_alerts:
+                for alert in alerts:
+                    echo_alert(alert)
+            if alerts:
+                click.echo(f'Found {len(alerts)} matching alerts')
+            else:
+                click.echo('No matching alerts found')
+
         else:
             okay, res = tools.set_silence(silence)
             if okay:
@@ -314,8 +338,9 @@ def silence_modify(sid: str, start: datetime, duration: str, end: datetime, crea
 @click.option('--comment', '-t', type=str, required=True, help='Comment on silence')
 @click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
 @click.option('--noop', is_flag=True, help="Do nothing - just test.")
+@click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Find alerts that match the silence')
 @click.argument('matcher', nargs=-1)
-def silence_create(start: datetime, duration: str | None, end: datetime, creator: str, comment: str, matcher: list[str], noop, localtime) -> None:
+def silence_create(start: datetime, duration: str | None, end: datetime, creator: str, comment: str, matcher: list[str], noop: bool, show_alerts: bool,  localtime: bool) -> None:
     """create a new silence"""
     tz_info = LOCAL_TZ if localtime else timezone.utc
     if start.date() == date(1900, 1, 1):  # no date is set (just time)
@@ -345,7 +370,15 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
         startsAt=start, endsAt=end, createdBy=creator, comment=comment
     )
     if noop:
-        click.echo(silence.json(indent=3))
+        echo_silence(silence, tz_info)
+        alerts = tools.find_alerts(silence)
+        if show_alerts:
+            for alert in alerts:
+                echo_alert(alert, tz_info)
+        if alerts:
+            click.echo(f'Found {len(alerts)} alerts')
+        else:
+            click.echo('No alerts found')
     else:
         okay, res = tools.set_silence(silence)
         if okay:
@@ -356,17 +389,23 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
 
 @click.command(name="show")
 @click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--show-alerts', 'show_alerts', is_flag=True, default=False)
 @click.argument('silence_id', type=str, nargs=-1)
-def silence_show(localtime: bool, silence_id: str) -> None:
+def silence_show(localtime: bool, silence_id: str, show_alerts: bool) -> None:
     """show all information of a given silence id"""
     tz_info = LOCAL_TZ if localtime else timezone.utc
     for s_id in silence_id:
         silence = tools.get_silence(s_id)
         if silence:
-            silence.startsAt = silence.startsAt.astimezone(tz_info)
-            silence.endsAt = silence.endsAt.astimezone(tz_info)
-            silence.updatedAt = silence.updatedAt.astimezone(tz_info)
             echo_silence(silence, tz_info)
+            alerts = tools.find_alerts(silence)
+            if show_alerts:
+                for alert in alerts:
+                    echo_alert(alert, tz_info)
+            if alerts:
+                click.echo(f'Found {len(alerts)} alerts')
+            else:
+                click.echo('No alerts found.')
 
 
 @click.group(name='alert')

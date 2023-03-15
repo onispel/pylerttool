@@ -3,6 +3,7 @@
 import datetime
 import re
 from typing import Iterable
+from functools import cache
 
 import requests
 
@@ -32,8 +33,11 @@ def get_status() -> model.AlertmanagerStatus:
     am_status = model.AlertmanagerStatus(**resp.json())
     return am_status
 
+@cache
 def get_silences(statelist: Iterable[model.State]|None = None,sfilter:list[str]|None = None) -> list[model.GettableSilence]:
     """Returns a list of silences. Filtering can be done by a given state"""
+    if not sfilter:
+        sfilter = []
     resp = requests.get(BASE_API_URL + Paths.SILENCES.value ,params={'filter':sfilter},headers=HEADERS,timeout=STD_TIMEOUT)
     slist = model.GettableSilences.parse_obj(resp.json()).__root__
     if statelist:
@@ -64,6 +68,7 @@ def expire_silence(silence_id: str) -> bool:
     resp = requests.delete(f'{BASE_API_URL}{Paths.SILENCE.value}/{silence_id}',headers=HEADERS,timeout=STD_TIMEOUT)
     return resp.ok
 
+@cache
 def get_alerts(active: bool = True, silenced: bool = True, inhibited: bool = True, unprocessed: bool = True, afilter: list[str]|None =None, receiver: str|None =None ) -> list[model.GettableAlert]:
     """Returns a list of matching alerts."""
     params = {
@@ -117,7 +122,6 @@ def is_matching_all(labels:model.LabelSet, matchers:model.Matchers) -> bool:
     for matcher in matchers.__root__:
         if matcher.name not in label_dict.keys():
             return False
-        # print(label_dict[matcher.name])
         if not is_matching(label_dict[matcher.name],matcher):
             return False
     return True
@@ -141,4 +145,14 @@ def find_silences(alert: model.Alert) -> list[model.GettableSilence|None]:
                 break
         if matching:
             result_list.append(silence)
+    return result_list
+
+def find_alerts(silence: model.GettableSilence) -> list[model.GettableAlert]:
+    """Finds and returns alerts for a given silence, 
+    according to the labels of the alert and the matchers of the silence."""
+    result_list: list[model.GettableAlert] = []
+    alerts = get_alerts(active=True, silenced=True, inhibited=False, unprocessed=False)
+    for alert in alerts:
+        if is_matching_all(alert.labels, silence.matchers):
+            result_list.append(alert)
     return result_list

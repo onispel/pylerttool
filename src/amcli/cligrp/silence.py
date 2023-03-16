@@ -14,10 +14,10 @@ def silence_grp() -> None:
     """Commands for handling silences"""
 
 @click.command(name='filter')
-@click.option('--active/--noactive', default=True, show_default='active')
-@click.option('--pending/--nopending', default=True, show_default='pending')
-@click.option('--expired/--noexpired', default=False, show_default='noexpired')
-@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--active/--noactive', default=True, show_default='--active')
+@click.option('--pending/--nopending', default=True, show_default='--pending')
+@click.option('--expired/--noexpired', default=False, show_default='--noexpired')
+@click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 @click.option('--has-alerts', 'has_alerts', is_flag=True, default=False, help='Show only silences with matching alerts')
 @click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Show alerts that match the silence')
 @click.argument('match_filter', nargs=-1)
@@ -60,12 +60,12 @@ def silence_delete(silence_id: str) -> None:
 
 
 @click.command(name="expires")
-@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 @click.option('--before', '-b', type=click.DateTime(formats=DT_FORMATS), default=None, help='silence expires before given date/time (overrides "--within")')
 @click.option('--within', '-w', type=str, default=None, help='silence expires within given timerange (i.e.: "2h30m")')
 @click.option('--after', '-a', type=click.DateTime(formats=DT_FORMATS), default=None, help='silence expires after given date/time (overrides "--within")')
 @click.option('--notwithin', '-n', type=str, default=None, help='silence expires AFTER given timerange (i.e.: "2h30m")')
-@click.option('--pending/--nopending', 'pending', default=True, show_default='pending', help='include or exclude pending silences')
+@click.option('--pending/--nopending', 'pending', default=True, show_default='--pending', help='include or exclude pending silences')
 @click.option('--has-alerts', 'has_alerts', is_flag=True, default=False, help='Show only silences with matching alerts')
 @click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Show alerts that match the silence')
 def silence_expires(localtime: bool, before: datetime | None, after: datetime | None, within: str | None, notwithin: str | None, pending: bool, has_alerts: bool, show_alerts: bool) -> None:
@@ -125,7 +125,7 @@ def silence_expires(localtime: bool, before: datetime | None, after: datetime | 
 
 
 @click.command(name="expired")
-@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 @click.option('--after', '-a', type=click.DateTime(formats=DT_FORMATS), default=None, help='silence expired after given date/time (overrides "--within")')
 @click.option('--within', '-w', type=str, default=None, help='silence expires within given timerange (i.e.: "2h30m")')
 def silence_expired(localtime: bool, after: datetime | None, within: str | None) -> None:
@@ -160,7 +160,7 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
 @click.option('--end', '-e', type=click.DateTime(formats=DT_FORMATS), default=None, help="endsAt")
 @click.option('--creator', '-u', type=str, default=None, show_default='(current user)', help='Creator of silence')
 @click.option('--comment', '-t', type=str, default=None, help='Comment on silence')
-@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 @click.option('--noop', is_flag=True, help="Do nothing - testing only.")
 @click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Find alerts that match the silence')
 @click.argument('matcher', nargs=-1)
@@ -224,7 +224,7 @@ def silence_modify(sid: str, start: datetime, duration: str, end: datetime, crea
 @click.option('--end', '-e', type=click.DateTime(formats=DT_FORMATS), default=None, help="endsAt")
 @click.option('--creator', '-u', type=str, default=getpass.getuser(), show_default='(current user)', help='Creator of silence')
 @click.option('--comment', '-t', type=str, required=True, help='Comment on silence')
-@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 @click.option('--noop', is_flag=True, help="Do nothing - just test.")
 @click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Find alerts that match the silence')
 @click.argument('matcher', nargs=-1)
@@ -276,7 +276,7 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
 
 
 @click.command(name="show")
-@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 @click.option('--show-alerts', 'show_alerts', is_flag=True, default=False)
 @click.argument('silence_id', type=str, nargs=-1)
 def silence_show(localtime: bool, silence_id: str, show_alerts: bool) -> None:

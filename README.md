@@ -2,6 +2,7 @@
 Helpful Library and CLI for daily alertmanager tasks.
 
 ## Installation
+Python 3.10+ is required.
 ### Pip from GitHub
 ```
 pip install git+https://github.com/onispel/pylerttool.git

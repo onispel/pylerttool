@@ -1,3 +1,4 @@
+from email.policy import default
 import click, getpass
 from datetime import datetime,timezone,date,time,timedelta
 from pytimeparse.timeparse import timeparse
@@ -64,17 +65,20 @@ def silence_delete(silence_id: str) -> None:
 @click.option('--within', '-w', type=str, default=None, help='silence expires within given timerange (i.e.: "2h30m")')
 @click.option('--after', '-a', type=click.DateTime(formats=DT_FORMATS), default=None, help='silence expires after given date/time (overrides "--within")')
 @click.option('--notwithin', '-n', type=str, default=None, help='silence expires AFTER given timerange (i.e.: "2h30m")')
+@click.option('--pending/--nopending', 'pending', default=True, show_default='pending', help='include or exclude pending silences')
 @click.option('--has-alerts', 'has_alerts', is_flag=True, default=False, help='Show only silences with matching alerts')
 @click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Show alerts that match the silence')
-def silence_expires(localtime: bool, before: datetime | None, after: datetime | None, within: str | None, notwithin: str | None, has_alerts: bool, show_alerts: bool) -> None:
+def silence_expires(localtime: bool, before: datetime | None, after: datetime | None, within: str | None, notwithin: str | None, pending: bool, has_alerts: bool, show_alerts: bool) -> None:
     """Search for silences that will expire"""
     tz_info = LOCAL_TZ if localtime else timezone.utc
 
     if len([opt for opt in (before, after, within, notwithin) if opt is not None]) != 1:
         raise click.UsageError(
             "Exactly ONE option of --before, --after, --within, --notwithin has to be used.")
-
-    silence_list = tools.get_silences(tuple([model.State.active, model.State.pending]))
+    stats = [model.State.active]
+    if pending:
+        stats.append(model.State.pending)
+    silence_list = tools.get_silences(tuple(stats))
 
     expiry_date = None
     if within:

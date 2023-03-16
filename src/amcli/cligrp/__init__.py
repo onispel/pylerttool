@@ -1,5 +1,6 @@
 from datetime import datetime,timezone,tzinfo
 import click,tabulate
+from urllib.parse import unquote
 import amlib.model as model
 from amlib.tools import matcher_op_to_str,silence_url
 
@@ -66,14 +67,14 @@ def echo_alert(alert: model.GettableAlert, tzi: tzinfo | None = timezone.utc) ->
         alert_tbl.extend(silencers)
     inhibitors = [['', inh] for inh in alert.status.inhibitedBy]
     if len(inhibitors) > 0:
-        inhibitors[0][0] = "silencedBy"
+        inhibitors[0][0] = "inhibitedBy"
         alert_tbl.extend(inhibitors)
-    annotations = [[ann[0], '=', ann[1]] for ann in alert.annotations]
+    annotations = [[ann[0], '=', unquote(ann[1])] for ann in alert.annotations]
     if len(annotations) > 0:
         alert_tbl.append(['annotations', tabulate.tabulate(
             annotations, tablefmt='plain')])
     labels = [[label[0], '=', label[1]] for label in alert.labels]
     if len(labels) > 0:
         alert_tbl.append(['labels', tabulate.tabulate(labels, tablefmt='plain')])
-    alert_tbl.append(['generatorURL', str(alert.generatorURL)])
+    alert_tbl.append(['generatorURL', unquote(str(alert.generatorURL))])
     click.echo(tabulate.tabulate(alert_tbl))

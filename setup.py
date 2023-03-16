@@ -3,7 +3,7 @@ from setuptools import setup, find_namespace_packages, find_packages
 
 setup(
     name="pylerttool",
-    version="0.0.3-dev",
+    version="0.1.0",
     author="Oliver Nispel",
     install_requires=[
         "requests",

@@ -5,6 +5,7 @@ setup(
     name="pylerttool",
     version="0.1.0-dev",
     author="Oliver Nispel",
+    author_email="oliver@nispel.org",
     install_requires=[
         "requests",
         "pydantic",

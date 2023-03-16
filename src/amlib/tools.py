@@ -23,6 +23,26 @@ def match(key: str, val: str, regex: bool = False, equal: bool = True) -> model.
     """Helper function: Returns a Matcher-object for use in silences"""
     return model.Matcher(name=key, value=val, isRegex=regex, isEqual=equal)
 
+def parse_matcher(expr: str) -> model.Matcher | None:
+    """translates matcher-string into matcher-object"""
+    matcher = None
+    regex = r"(?P<key>\S+)(?P<op>!?=~?)(?P<val>.*)"
+    matching = re.match(regex, expr)
+    if matching:
+        key, oper, val = matching.groups()
+        is_eq = False if oper[0] == "!" else True
+        is_re = True if oper[-1] == "~" else False
+        matcher = match(key, val, is_re, is_eq)
+    return matcher
+
+
+def matcher_op_to_str(matcher: model.Matcher) -> str:
+    """Helper function for creating Matcher objects from strings."""
+    moper = "=" if matcher.isEqual else "!="
+    moper += "~" if matcher.isRegex else ""
+    return moper
+
+
 def silence_url(silence:model.GettableSilence) -> str:
     """Returns HTML-Url for Silence."""
     return F"{BASE_SILENCE_URL}{silence.id}"
@@ -34,7 +54,7 @@ def get_status() -> model.AlertmanagerStatus:
     return am_status
 
 @cache
-def get_silences(statelist: Iterable[model.State]|None = None,sfilter:list[str]|None = None) -> list[model.GettableSilence]:
+def get_silences(statelist: Iterable[model.State]|None = None,sfilter:Iterable[str]|None = None) -> list[model.GettableSilence]:
     """Returns a list of silences. Filtering can be done by a given state"""
     if not sfilter:
         sfilter = []
@@ -69,7 +89,7 @@ def expire_silence(silence_id: str) -> bool:
     return resp.ok
 
 @cache
-def get_alerts(active: bool = True, silenced: bool = True, inhibited: bool = True, unprocessed: bool = True, afilter: list[str]|None =None, receiver: str|None =None ) -> list[model.GettableAlert]:
+def get_alerts(active: bool = True, silenced: bool = True, inhibited: bool = True, unprocessed: bool = True, afilter: Iterable[str]|None =None, receiver: str|None =None ) -> list[model.GettableAlert]:
     """Returns a list of matching alerts."""
     params = {
         'active': active,
@@ -147,7 +167,7 @@ def find_silences(alert: model.Alert) -> list[model.GettableSilence|None]:
             result_list.append(silence)
     return result_list
 
-def find_alerts(silence: model.GettableSilence) -> list[model.GettableAlert]:
+def find_alerts(silence: model.Silence) -> list[model.GettableAlert]:
     """Finds and returns alerts for a given silence, 
     according to the labels of the alert and the matchers of the silence."""
     result_list: list[model.GettableAlert] = []

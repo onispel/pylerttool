@@ -126,6 +126,8 @@ def silence_expires(localtime: bool, before: datetime | None, after: datetime | 
                     echo_alert(alert, tz_info)
             if alerts:
                 click.echo(f"Found {len(alerts)} alerts matching this silence")
+            else:
+                click.echo("No alerts match this silence")
         if silence_counter == 0:
             click.echo("No silences found")
         else:

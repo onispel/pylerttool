@@ -32,10 +32,12 @@ def silence_filter(active: bool, pending: bool, expired: bool, localtime: bool, 
     if expired:
         statelist.append(model.State.expired)
     silences = tools.get_silences(tuple(statelist), tuple(match_filter)) if match_filter else []
+    silence_counter = 0
     for silence in silences:
         alerts = tools.find_alerts(silence)
         if has_alerts and not alerts:
             continue
+        silence_counter += 1
         echo_silence(silence, tz_info)
         if show_alerts:
             for alert in alerts:
@@ -44,6 +46,10 @@ def silence_filter(active: bool, pending: bool, expired: bool, localtime: bool, 
             click.echo(f"Found {len(alerts)} alerts matching this silence")
         else:
             click.echo("No alerts match this silence")
+    if silence_counter == 0:
+        click.echo("No silences found")
+    else:
+        click.echo(f"Found {silence_counter} silences")
 
 
 @click.command(name='delete')
@@ -108,17 +114,22 @@ def silence_expires(localtime: bool, before: datetime | None, after: datetime | 
         silence_list = [silence for silence in silence_list if silence.endsAt > expiry_date]
 
     if silence_list:
+        silence_counter = 0
         for silence in silence_list:
             alerts = tools.find_alerts(silence)
             if has_alerts and not alerts:
                 continue
+            silence_counter += 1
             echo_silence(silence, tz_info)
             if show_alerts:
                 for alert in alerts:
                     echo_alert(alert, tz_info)
             if alerts:
                 click.echo(f"Found {len(alerts)} alerts matching this silence")
-        click.echo(f'Found {len(silence_list)} expiring silences')
+        if silence_counter == 0:
+            click.echo("No silences found")
+        else:
+            click.echo(f"Found {silence_counter} silences")
     else:
         click.echo('No expiring silences found')
         exit(1)
@@ -149,8 +160,12 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
             silence for silence in silence_list if silence.endsAt > expiry_date]
         for silence in silence_list:
             echo_silence(silence, tz_info)
+        if silence_list:
+            click.echo(f"Found {len(silence_list)} expired silences")
+        else:
+            click.echo("No expired silences found")
     else:
-        exit(1)
+        click.echo("No expired silences found")
 
 
 @click.command(name='modify')
@@ -269,8 +284,10 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
             click.echo('No alerts found')
     else:
         okay, res = tools.set_silence(silence)
+        print(res)
         if okay:
-            click.echo(f'Silence created: {res}')
+            click.echo(f'Silence ID:  {res}')
+            click.echo(f'Silence URL: {tools.silence_url(tools.get_silence(str(res)))}') #type: ignore
         else:
             raise click.UsageError(str(res))
 

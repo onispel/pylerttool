@@ -3,8 +3,9 @@ from setuptools import setup, find_namespace_packages, find_packages
 
 setup(
     name="pylerttool",
-    version="0.1.0",
+    version="0.1.1",
     author="Oliver Nispel",
+    author_email="oliver@nispel.org",
     install_requires=[
         "requests",
         "pydantic",

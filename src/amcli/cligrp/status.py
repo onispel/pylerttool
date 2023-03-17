@@ -29,7 +29,7 @@ def status_grp() -> None:
     pass
 
 @click.command(name='show')
-@click.option('--local/--utc', 'localtime', default=True, show_default='local', help='UTC / local timezone')
+@click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 def status_show(localtime:bool) -> None:
     """ Show status of alertmanager """
     tz_info = LOCAL_TZ if localtime else timezone.utc

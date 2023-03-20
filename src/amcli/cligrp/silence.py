@@ -31,7 +31,7 @@ def silence_filter(active: bool, pending: bool, expired: bool, localtime: bool, 
         statelist.append(model.State.pending)
     if expired:
         statelist.append(model.State.expired)
-    silences = tools.get_silences(tuple(statelist), tuple(match_filter)) if match_filter else []
+    silences = tools.get_silences(tuple(statelist), tuple(match_filter)) if match_filter else tools.get_silences(tuple(statelist))
     silence_counter = 0
     for silence in silences:
         alerts = tools.find_alerts(silence)
@@ -286,7 +286,6 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
             click.echo('No alerts found')
     else:
         okay, res = tools.set_silence(silence)
-        print(res)
         if okay:
             click.echo(f'Silence ID:  {res}')
             click.echo(f'Silence URL: {tools.silence_url(tools.get_silence(str(res)))}') #type: ignore

@@ -31,7 +31,7 @@ def silence_filter(active: bool, pending: bool, expired: bool, localtime: bool, 
         statelist.append(model.State.pending)
     if expired:
         statelist.append(model.State.expired)
-    silences = tools.get_silences(tuple(statelist), tuple(match_filter)) if match_filter else []
+    silences = tools.get_silences(tuple(statelist), tuple(match_filter)) if match_filter else tools.get_silences(tuple(statelist))
     silence_counter = 0
     for silence in silences:
         alerts = tools.find_alerts(silence)

@@ -286,7 +286,6 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
             click.echo('No alerts found')
     else:
         okay, res = tools.set_silence(silence)
-        print(res)
         if okay:
             click.echo(f'Silence ID:  {res}')
             click.echo(f'Silence URL: {tools.silence_url(tools.get_silence(str(res)))}') #type: ignore

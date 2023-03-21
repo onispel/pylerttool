@@ -91,12 +91,14 @@ def silence_expires(localtime: bool, before: datetime | None, after: datetime | 
         within_secs = timeparse(within)
         if not within_secs:
             raise click.BadOptionUsage('--within','invalid time range format')
-        expiry_date = datetime.now().astimezone(tz_info) + timedelta(seconds=within_secs)
+        expiry_date = datetime.now(tz_info) + timedelta(seconds=within_secs)
     if before:
         if before.date() == date(1900, 1, 1):
             before = datetime.combine(datetime.now(tz_info).date(), time(
-                before.hour, before.minute, before.second))
+                before.hour, before.minute, before.second), tz_info)
         expiry_date = before.astimezone(tz_info)
+        if expiry_date < datetime.now(tz_info):
+            expiry_date += timedelta(days=1)
     if expiry_date:
         silence_list = [silence for silence in silence_list if silence.endsAt < expiry_date]
 
@@ -104,11 +106,13 @@ def silence_expires(localtime: bool, before: datetime | None, after: datetime | 
         notwithin_secs = timeparse(notwithin)
         if not notwithin_secs:
             raise click.BadOptionUsage('--notwithin','invalid time range format')
-        expiry_date = datetime.now().astimezone(tz_info) + timedelta(seconds=notwithin_secs)
+        expiry_date = datetime.now(tz_info) + timedelta(seconds=notwithin_secs)
     if after:
         if after.date() == date(1900, 1, 1):
             after = datetime.combine(datetime.now(tz_info).date(), time(
-                after.hour, after.minute, after.second))
+                after.hour, after.minute, after.second), tz_info)
+            if after < datetime.now(tz_info):
+                after += timedelta(days=1)
         expiry_date = after.astimezone(tz_info)
     if any((notwithin,after)) and expiry_date:
         silence_list = [silence for silence in silence_list if silence.endsAt > expiry_date]
@@ -149,12 +153,11 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
         raise click.UsageError('"--after or --within as to be specified')
     if within:
         within_secs = timeparse(within)
-        expiry_date = datetime.now().astimezone(
-            tz_info) - timedelta(seconds=within_secs)
+        expiry_date = datetime.now(tz_info) - timedelta(seconds=within_secs)
     if after:
         if after.date() == date(1900, 1, 1):
             after = datetime.combine(datetime.now(tz_info).date(), time(
-                after.hour, after.minute, after.second))
+                after.hour, after.minute, after.second), tz_info)
         expiry_date = after.astimezone(tz_info)
     silence_list = tools.get_silences(tuple([model.State.expired]))
     if silence_list:
@@ -189,18 +192,19 @@ def silence_modify(sid: str, start: datetime, duration: str, end: datetime, crea
         if start:
             if start.date() == date(1900, 1, 1):
                 start = datetime.combine(datetime.now(tz_info).date(), time(
-                    start.hour, start.minute, start.second))
-            start = start.astimezone(tz_info)
-            silence.startsAt = start
+                    start.hour, start.minute, start.second), tz_info)
+                if start <= datetime.now(tz_info):
+                    start += timedelta(days=1)
+            silence.startsAt = start.astimezone(tz_info)
         if duration:
             duration_secs = timeparse(duration)
             end = silence.startsAt + timedelta(seconds=duration_secs)
         if end:
             if end.date() == date(1900, 1, 1):
-                end = datetime.combine(start.date(), time(
-                    end.hour, end.minute, end.second))
-                if end <= start:
-                    end = end + timedelta(days=1)
+                end = datetime.combine(silence.startsAt.date(), time(
+                    end.hour, end.minute, end.second), tz_info)
+                if end <= silence.startsAt:
+                    end += timedelta(days=1)
             end = end.astimezone(tz_info)
             silence.endsAt = end
         if creator:
@@ -249,8 +253,10 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
     """create a new silence"""
     tz_info = LOCAL_TZ if localtime else timezone.utc
     if start.date() == date(1900, 1, 1):  # no date is set (just time)
-        start = datetime.combine(date.today(), time(
-            start.hour, start.minute, start.second))
+        start = datetime.combine(datetime.now(tz_info).date(), time(
+            start.hour, start.minute, start.second), tz_info)
+        if start <= datetime.now(tz_info):
+            start += timedelta(days=1)
     start = start.astimezone(tz_info)
     if duration is None and end is None:
         raise click.UsageError("Either --duration or --end ist required.")
@@ -259,11 +265,11 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
         end = start + timedelta(seconds=duration_secs)
     else:
         if end.date() == date(1900, 1, 1):  # no date is set (just time)
-            end = datetime.combine(start.date(), time(
-                end.hour, end.minute, end.second))
+            end = datetime.combine(datetime.now(tz_info).date(), time(
+                end.hour, end.minute, end.second), tz_info)
             end = end.astimezone(tz_info)
             if end <= start:
-                end = end + timedelta(days=1)
+                end += timedelta(days=1)
     end = end.astimezone(tz_info)
     matchers = []
     for single_match in matcher:

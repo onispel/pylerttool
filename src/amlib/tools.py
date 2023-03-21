@@ -26,7 +26,7 @@ def match(key: str, val: str, regex: bool = False, equal: bool = True) -> model.
 def parse_matcher(expr: str) -> model.Matcher | None:
     """translates matcher-string into matcher-object"""
     matcher = None
-    regex = r"(?P<key>\S+)(?P<op>!?=~?)(?P<val>.*)"
+    regex = r"(?P<key>\w+)(?P<op>!?=~?)(?P<val>.*)"
     matching = re.match(regex, expr)
     if matching:
         key, oper, val = matching.groups()

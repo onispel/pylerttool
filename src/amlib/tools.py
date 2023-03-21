@@ -38,8 +38,13 @@ def parse_matcher(expr: str) -> model.Matcher | None:
 
 def matcher_op_to_str(matcher: model.Matcher) -> str:
     """Helper function for creating Matcher objects from strings."""
-    moper = "=" if matcher.isEqual else "!="
-    moper += "~" if matcher.isRegex else ""
+    moper = ""
+    if matcher.isEqual:
+        moper = "="
+    else:
+        moper = "!="
+    if matcher.isRegex:
+        moper = moper[0] + "~"
     return moper
 
 

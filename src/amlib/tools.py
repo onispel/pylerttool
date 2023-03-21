@@ -132,7 +132,7 @@ def is_matching(value:str, matcher:model.Matcher) -> bool:
                 return True
             else:
                 return False
-        case (False, False):
+        case (False, True):
             op_match = re.search(matcher.value,value)
             if op_match:
                 return False

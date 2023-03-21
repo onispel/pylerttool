@@ -21,6 +21,7 @@ types-requests = "*"
 autopep8 = "*"
 build = "*"
 pytest = "*"
+types-pyyaml = "*"
 
 [requires]
 python_version = "3.10"

@@ -3,7 +3,9 @@
 import os
 import yaml
 
-def read_config(path:str|None = None) -> dict:
+import amlib
+
+def read_from_file(path:str|None = None) -> dict:
     if not path:
         path = os.path.expanduser("~")
         config_file = os.path.join(path, ".pylerttool.yaml")
@@ -16,3 +18,16 @@ def read_config(path:str|None = None) -> dict:
         raise FileNotFoundError(f"No configuration file found, please create {config_file}")
         return {}
 
+def set_config(config:dict) -> None:
+    try:
+        amlib.BASE_URL = config["URL"]["BASE_URL"]
+        amlib.BASE_API_URL = amlib.BASE_URL + config["URL"]["API_PATH"]
+        amlib.BASE_SILENCE_URL = amlib.BASE_URL + config["URL"]["HTTP_SILENCE_PATH"]
+    except KeyError as ke:
+        print(f"Invalid configuration File - KeyError: {ke}")
+        exit(1)
+
+    Auth = config.get("Authentication", None)
+    if Auth:
+        if Auth.get("Header", None):
+            amlib.HEADERS.update(Auth["Header"])

@@ -1,9 +1,18 @@
 # read configuration from yaml file in (home) directory
 
-import os
+import os,sys
 import yaml
-
 import amlib
+
+STD_TIMEOUT = (10,20)
+
+# BASE_URL = None
+# BASE_API_URL = None
+# BASE_SILENCE_URL = None
+URLS = {}
+HEADERS = {
+    "Content-Type": "application/json",
+}
 
 def read_from_file(path:str|None = None) -> dict:
     if not path:
@@ -14,15 +23,14 @@ def read_from_file(path:str|None = None) -> dict:
             config = yaml.safe_load(f)
         return config
     except FileNotFoundError:
-        # print(f"No configuration file found, please create {config_file}")
         raise FileNotFoundError(f"No configuration file found, please create {config_file}")
         return {}
 
 def set_config(config:dict) -> None:
     try:
-        amlib.BASE_URL = config["URL"]["BASE_URL"]
-        amlib.BASE_API_URL = amlib.BASE_URL + config["URL"]["API_PATH"]
-        amlib.BASE_SILENCE_URL = amlib.BASE_URL + config["URL"]["HTTP_SILENCE_PATH"]
+        URLS["BASE_URL"] = config["URL"]["BASE_URL"]
+        URLS["BASE_API_URL"] = URLS["BASE_URL"] + config["URL"]["API_PATH"]
+        URLS["BASE_SILENCE_URL"] = URLS["BASE_URL"] + config["URL"]["HTTP_SILENCE_PATH"]
     except KeyError as ke:
         print(f"Invalid configuration File - KeyError: {ke}")
         exit(1)
@@ -30,4 +38,4 @@ def set_config(config:dict) -> None:
     Auth = config.get("Authentication", None)
     if Auth:
         if Auth.get("Header", None):
-            amlib.HEADERS.update(Auth["Header"])
+            HEADERS.update(Auth["Header"])

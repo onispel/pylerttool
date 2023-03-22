@@ -21,7 +21,7 @@ setup(
     },
     entry_points = {
         'console_scripts': [
-            'amcli = amcli.am_cli:main_cli'
+            'amcli = amlib.am_cli:main_cli'
         ]
     },
     python_requires=">=3.10",

@@ -79,6 +79,5 @@ def echo_alert(alert: model.GettableAlert, tzi: tzinfo | None = timezone.utc) ->
     labels = [[label[0], '=', label[1]] for label in alert.labels]
     if len(labels) > 0:
         alert_tbl.append(['labels', tabulate.tabulate(labels, tablefmt='plain')])
-    #alert_tbl.append(['generatorURL', unquote(str(alert.generatorURL))])
     alert_tbl.append(['generatorURL', str(alert.generatorURL)])
     click.echo(tabulate.tabulate(alert_tbl))

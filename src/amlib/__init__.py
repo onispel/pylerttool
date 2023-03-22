@@ -1,16 +1,15 @@
-from . import config
 from enum import Enum
 
 # Connect and read timeout
-STD_TIMEOUT=(10,20)
 
-HEADERS = {
-    "Content-Type": "application/json",
-}
 
-BASE_URL = ""
-BASE_API_URL = ""
-BASE_SILENCE_URL = ""
+# HEADERS = {
+#     "Content-Type": "application/json",
+# }
+
+# BASE_URL = ""
+# BASE_API_URL = ""
+# BASE_SILENCE_URL = ""
 # # Read configuration
 # try:
 #     conf = config.read_from_file()

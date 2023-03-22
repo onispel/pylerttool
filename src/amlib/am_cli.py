@@ -13,7 +13,7 @@ def main_cli() -> None:
 
 
 if __name__ == '__main__':
-
+    print("Alles Banane?")
     conf = read_from_file()
     set_config(conf)
 

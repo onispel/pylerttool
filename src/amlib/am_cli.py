@@ -20,5 +20,4 @@ if __name__ == '__main__':
     conf = read_from_file()
     set_config(conf)
 
-
     main_cli()

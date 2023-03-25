@@ -1,6 +1,6 @@
 """ Command line interface for alertmanager"""
 import click
-from amlib.config import read_from_file, set_config, URLS, HEADERS
+from amlib.config import read_from_file, set_config
 
 from amlib.cligrp.status import status_grp
 from amlib.cligrp.alert import alert_grp

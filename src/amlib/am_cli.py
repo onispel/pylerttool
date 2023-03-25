@@ -15,9 +15,10 @@ main_cli.add_command(status_grp)
 main_cli.add_command(silence_grp)
 main_cli.add_command(alert_grp)
 
-if __name__ == '__main__':
+conf = read_from_file()
+print(conf)
+set_config(conf)
 
-    conf = read_from_file()
-    set_config(conf)
+if __name__ == '__main__':
 
     main_cli()

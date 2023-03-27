@@ -7,7 +7,11 @@ from functools import cache
 
 import requests
 
-from . import BASE_SILENCE_URL, BASE_API_URL, HEADERS, STD_TIMEOUT, Paths, model
+# from amlib.config import BASE_SILENCE_URL, BASE_API_URL, HEADERS, STD_TIMEOUT
+from amlib.config import URLS, HEADERS, STD_TIMEOUT
+from amlib import Paths, model
+
+
 
 
 def get_local_tzinfo() -> datetime.tzinfo|None:
@@ -26,7 +30,7 @@ def match(key: str, val: str, regex: bool = False, equal: bool = True) -> model.
 def parse_matcher(expr: str) -> model.Matcher | None:
     """translates matcher-string into matcher-object"""
     matcher = None
-    regex = r"(?P<key>\S+)(?P<op>!?=~?)(?P<val>.*)"
+    regex = r"(?P<key>\w+)(?P<op>!?=~?)(?P<val>.*)"
     matching = re.match(regex, expr)
     if matching:
         key, oper, val = matching.groups()
@@ -38,18 +42,23 @@ def parse_matcher(expr: str) -> model.Matcher | None:
 
 def matcher_op_to_str(matcher: model.Matcher) -> str:
     """Helper function for creating Matcher objects from strings."""
-    moper = "=" if matcher.isEqual else "!="
-    moper += "~" if matcher.isRegex else ""
+    moper = ""
+    if matcher.isEqual:
+        moper = "="
+    else:
+        moper = "!="
+    if matcher.isRegex:
+        moper = moper[0] + "~"
     return moper
 
 
 def silence_url(silence:model.GettableSilence) -> str:
     """Returns HTML-Url for Silence."""
-    return F"{BASE_SILENCE_URL}{silence.id}"
+    return F"{URLS['BASE_SILENCE_URL']}{silence.id}"
 
 def get_status() -> model.AlertmanagerStatus:
     """Returns status of Alertmanager"""
-    resp = requests.get(BASE_API_URL + Paths.STATUS.value ,headers=HEADERS,timeout=STD_TIMEOUT)
+    resp = requests.get(URLS["BASE_API_URL"] + Paths.STATUS.value ,headers=HEADERS,timeout=STD_TIMEOUT)
     am_status = model.AlertmanagerStatus(**resp.json())
     return am_status
 
@@ -58,7 +67,7 @@ def get_silences(statelist: Iterable[model.State]|None = None,sfilter:Iterable[s
     """Returns a list of silences. Filtering can be done by a given state"""
     if not sfilter:
         sfilter = []
-    resp = requests.get(BASE_API_URL + Paths.SILENCES.value ,params={'filter':sfilter},headers=HEADERS,timeout=STD_TIMEOUT)
+    resp = requests.get(URLS["BASE_API_URL"] + Paths.SILENCES.value ,params={'filter':sfilter},headers=HEADERS,timeout=STD_TIMEOUT)
     slist = model.GettableSilences.parse_obj(resp.json()).__root__
     if statelist:
         slist = [s for s in slist if s.status.state in statelist]
@@ -66,7 +75,7 @@ def get_silences(statelist: Iterable[model.State]|None = None,sfilter:Iterable[s
 
 def get_silence(silence_id: str) -> model.GettableSilence|None:
     """Returns a silence by its id."""
-    resp = requests.get(f'{BASE_API_URL}{Paths.SILENCE.value}/{silence_id}',headers=HEADERS,timeout=STD_TIMEOUT)
+    resp = requests.get(f'{URLS["BASE_API_URL"]}{Paths.SILENCE.value}/{silence_id}',headers=HEADERS,timeout=STD_TIMEOUT)
     if resp.ok:
         silence = model.GettableSilence(**resp.json())
     else:
@@ -75,7 +84,7 @@ def get_silence(silence_id: str) -> model.GettableSilence|None:
 
 def set_silence(silence: model.Silence) -> tuple[bool, str|dict[str, str]]:
     """Set or modify silence. Returns if request was successful and description ( True and silenceID if successful )"""
-    resp = requests.post(f'{BASE_API_URL}{Paths.SILENCES.value}',data=silence.json(),headers=HEADERS,timeout=STD_TIMEOUT)
+    resp = requests.post(f'{URLS["BASE_API_URL"]}{Paths.SILENCES.value}',data=silence.json(),headers=HEADERS,timeout=STD_TIMEOUT)
     retval = None
     if resp.ok:
         retval = resp.json()['silenceID']
@@ -85,7 +94,7 @@ def set_silence(silence: model.Silence) -> tuple[bool, str|dict[str, str]]:
 
 def expire_silence(silence_id: str) -> bool:
     """Expire a silence by its id."""
-    resp = requests.delete(f'{BASE_API_URL}{Paths.SILENCE.value}/{silence_id}',headers=HEADERS,timeout=STD_TIMEOUT)
+    resp = requests.delete(f'{URLS["BASE_API_URL"]}{Paths.SILENCE.value}/{silence_id}',headers=HEADERS,timeout=STD_TIMEOUT)
     return resp.ok
 
 @cache
@@ -100,7 +109,7 @@ def get_alerts(active: bool = True, silenced: bool = True, inhibited: bool = Tru
         'receiver': receiver
     }
     params = { k: v for (k,v) in params.items() if v != None}
-    resp = requests.get(BASE_API_URL + Paths.ALERTS.value, headers=HEADERS, params=params,timeout=STD_TIMEOUT)
+    resp = requests.get(URLS["BASE_API_URL"] + Paths.ALERTS.value, headers=HEADERS, params=params,timeout=STD_TIMEOUT)
     alert_list = model.GettableAlerts.parse_obj(resp.json()).__root__
     return alert_list
 
@@ -127,7 +136,7 @@ def is_matching(value:str, matcher:model.Matcher) -> bool:
                 return True
             else:
                 return False
-        case (False, False):
+        case (False, True):
             op_match = re.search(matcher.value,value)
             if op_match:
                 return False

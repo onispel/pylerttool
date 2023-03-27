@@ -3,7 +3,7 @@ from setuptools import setup, find_namespace_packages, find_packages
 
 setup(
     name="pylerttool",
-    version="0.1.3",
+    version="0.1.4",
     author="Oliver Nispel",
     author_email="oliver@nispel.org",
     install_requires=[
@@ -21,7 +21,7 @@ setup(
     },
     entry_points = {
         'console_scripts': [
-            'amcli = amcli.am_cli:main_cli'
+            'amcli = amlib.am_cli:main_cli'
         ]
     },
     python_requires=">=3.10",

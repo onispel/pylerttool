@@ -159,6 +159,7 @@ def silence_expired(localtime: bool, after: datetime | None, within: str | None)
             after = datetime.combine(datetime.now(tz_info).date(), time(
                 after.hour, after.minute, after.second), tz_info)
         expiry_date = after.astimezone(tz_info)
+
     silence_list = tools.get_silences(tuple([model.State.expired]))
     if silence_list:
         silence_list = [
@@ -220,7 +221,7 @@ def silence_modify(sid: str, start: datetime, duration: str, end: datetime, crea
             silence.matchers = model.Matchers.parse_obj(matchers)
         if noop:
             echo_silence(silence)
-            alerts = tools.get_alerts(silence)
+            alerts = tools.find_alerts(silence)
             if show_alerts:
                 for alert in alerts:
                     echo_alert(alert)

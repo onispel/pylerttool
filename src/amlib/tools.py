@@ -87,6 +87,7 @@ def set_silence(silence: model.Silence) -> tuple[bool, str|dict[str, str]]:
     resp = requests.post(f'{URLS["BASE_API_URL"]}{Paths.SILENCES.value}',data=silence.json(),headers=HEADERS,timeout=STD_TIMEOUT)
     retval = None
     if resp.ok:
+        print(retval)
         retval = resp.json()['silenceID']
     else:
         retval = resp.json()

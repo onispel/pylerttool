@@ -8,7 +8,7 @@ setup(
     author_email="oliver@nispel.org",
     install_requires=[
         "requests",
-        "pydantic",
+        "pydantic==1.*",
         "click",
         "tabulate",
         "pyyaml",

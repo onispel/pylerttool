@@ -5,20 +5,23 @@ name = "pypi"
 
 [packages]
 requests = "*"
-pydantic = "*"
+pydantic = "==1.*"
 click = "*"
 tabulate = "*"
 pytimeparse = "*"
 pyyaml = "*"
+types-tabulate = "*"
 
 [dev-packages]
+pytest = "*"
 mypy = "*"
-types-tabulate = "*"
 pylint = "*"
 setuptools = "*"
 types-requests = "*"
 autopep8 = "*"
 build = "*"
+types-pyyaml = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.10"

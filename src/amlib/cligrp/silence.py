@@ -300,6 +300,8 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
             click.echo(f'Silence ID:  {res}')
             click.echo(f'Silence URL: {tools.silence_url(tools.get_silence(str(res)))}') #type: ignore
         else:
+            click.echo('Error creating silence', err=True)
+            click.echo(res, err=True)
             raise click.UsageError(str(res))
 
 

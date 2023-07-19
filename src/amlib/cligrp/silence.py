@@ -249,8 +249,9 @@ def silence_modify(sid: str, start: datetime, duration: str, end: datetime, crea
 @click.option('--local/--utc', 'localtime', default=True, show_default='--local', help='UTC / local timezone')
 @click.option('--noop', is_flag=True, help="Do nothing - just test.")
 @click.option('--show-alerts', 'show_alerts', is_flag=True, default=False, help='Find alerts that match the silence')
+@click.option('--verbose', '-v', is_flag=True, default=False, help='Print more information after creation')
 @click.argument('matcher', nargs=-1)
-def silence_create(start: datetime, duration: str | None, end: datetime, creator: str, comment: str, matcher: list[str], noop: bool, show_alerts: bool,  localtime: bool) -> None:
+def silence_create(start: datetime, duration: str | None, end: datetime, creator: str, comment: str, matcher: list[str], noop: bool, show_alerts: bool,  localtime: bool, verbose:bool) -> None:
     """create a new silence"""
     tz_info = LOCAL_TZ if localtime else timezone.utc
     if start.date() == date(1900, 1, 1):  # no date is set (just time)
@@ -294,6 +295,8 @@ def silence_create(start: datetime, duration: str | None, end: datetime, creator
     else:
         okay, res = tools.set_silence(silence)
         if okay:
+            if verbose:
+                echo_silence(silence,tz_info)
             click.echo(f'Silence ID:  {res}')
             click.echo(f'Silence URL: {tools.silence_url(tools.get_silence(str(res)))}') #type: ignore
         else:

@@ -3,9 +3,9 @@ from amlib import tools
 
 def test_is_matching() -> None:
 
-    matecher_eq = model.Matcher(name="match_eq", value="value1", isEqual=True, isRegex=False)
-    assert tools.is_matching("value1", matecher_eq) == True
-    assert tools.is_matching("value2", matecher_eq) == False
+    matcher_eq = model.Matcher(name="match_eq", value="value1", isEqual=True, isRegex=False)
+    assert tools.is_matching("value1", matcher_eq) == True
+    assert tools.is_matching("value2", matcher_eq) == False
 
     matcher_neq = model.Matcher(name="match_neq", value="value2", isEqual=False, isRegex=False)
     assert tools.is_matching("value2", matcher_neq) == False

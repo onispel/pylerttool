@@ -64,3 +64,4 @@ pipenv update --dev
 ## Useful URLs
 - https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
 - https://app.swaggerhub.com/apis/megrez/alertmanager-api/0.0.1#/
+- https://app.swaggerhub.com/apis/muryoutaisuu/alertmanager-api/2#/
